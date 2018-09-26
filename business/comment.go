@@ -20,16 +20,13 @@ func Create_Comment(w http.ResponseWriter, r *http.Request) {
 	log.Println(comm.BEGIN_TAG, "Comment......")
 	t1 := time.Now()
 
-	if r.Method == "OPTIONS" {
-	}
-
 	var post_comment comm.Wait_PostComment_Request
 	err := json.NewDecoder(r.Body).Decode(&post_comment)
 	log.Println(r.Body)
 	if err != nil {
 		log.Println("Error===>", err.Error())
-		//Write_Response(comm.RESP_JSON_ERROR, w, r)
-		//return
+		Write_Response(comm.RESP_JSON_ERROR, w, r)
+		return
 	}
 	log.Println(post_comment)
 	defer r.Body.Close()
@@ -39,9 +36,10 @@ func Create_Comment(w http.ResponseWriter, r *http.Request) {
 	getval := geohash.EncodeInt(lat, lng)
 
 	//log.Println("geohash=======>", geohash.)
+	commentNo := strconv.FormatInt(time.Now().UnixNano(), 10)
 	create_comment := comm.Wait_Users_Comment{
 		User_id:     post_comment.User_id,
-		Comment_no:  strconv.FormatInt(time.Now().UnixNano(), 10),
+		Comment_no:  commentNo,
 		Device_type: post_comment.Device_type,
 		Device_ip:   post_comment.Device_ip,
 		Lng:         post_comment.Lng,
@@ -56,7 +54,8 @@ func Create_Comment(w http.ResponseWriter, r *http.Request) {
 		log.Println(comm.END_TAG, "Comment Error......", time.Since(t1))
 		return
 	}
-	Write_Response(comm.RESP_SUCC, w, r)
+	commResp := comm.Wait_PostComment_Response{comm.RESP_SUCC.Status_code, comm.RESP_SUCC.Status_msg, commentNo}
+	Write_Response(commResp, w, r)
 	log.Println(comm.END_TAG, "Comment Succ......", time.Since(t1))
 	return
 }

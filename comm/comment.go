@@ -44,6 +44,7 @@ type Wait_PostComment_Request struct {
 type Wait_PostComment_Response struct {
 	Status_code string `json:"status_code"`
 	Status_msg  string `json:"status_msg"`
+	Comment_no  string `json:"comment_no"`
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -70,7 +71,6 @@ type Wait_GetCommentList_Response struct {
 	GetCommentInfo request
 */
 type Wait_GetComment_Request struct {
-	User_id    string `json:"user_id"`
 	Comment_no string `json:"comment_no"`
 }
 
