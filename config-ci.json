@@ -1,0 +1,7 @@
+{
+"config":{
+	"LISTEN_PORT":":8089",
+	"DB_URL": "root:123456@tcp(10.89.4.205:3306)/waiting_db?charset=utf8&parseTime=True&loc=Local",
+	"SCAN_INTERVAL":1
+	}
+}
