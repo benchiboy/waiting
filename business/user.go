@@ -395,7 +395,7 @@ func GetCaptchas(w http.ResponseWriter, r *http.Request) {
 	idKeyD, capD := base64Captcha.GenerateCaptcha("", configD)
 	//以base64编码
 	base64stringD := base64Captcha.CaptchaWriteToBase64Encoding(capD)
-	fmt.Println(idKeyD, base64stringD, "\n")
+	fmt.Println(idKeyD, base64stringD)
 
 	user := comm.Wait_User{Login_name: cap_req.Login_name, Last_pic_code: idKeyD}
 	err = db.Update_User_PicCode(user)

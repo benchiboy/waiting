@@ -27,14 +27,17 @@ func Create_comment(comment comm.Wait_Users_Comment) error {
 /*
 	获取用户评论列表
 */
-func Get_CommentList(dbUrl string) ([]comm.Wait_Comment_Info, error) {
+func Get_CommentList(geoHash string) ([]comm.Wait_Comment_Info, error) {
 	db, err := connect_db()
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
 	commentList := make([]comm.Wait_Comment_Info, 10, 10)
-	rows := db.Select("comment_no,lng,lat,comment_msg").Find(&commentList)
+
+	rows := db.Where("geohash = ?", geoHash).Find(&commentList)
+
+	//	rows := db.Select("comment_no,lng,lat,comment_msg").Find(&commentList)
 	if rows.Error != nil {
 		if rows.RecordNotFound() {
 			return nil, nil

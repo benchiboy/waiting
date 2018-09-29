@@ -97,8 +97,10 @@ func go_WebServer() {
 
 	http.HandleFunc("/user/v1/reguser", business.RegUser)
 	http.HandleFunc("/user/v1/login", business.UserLogin)
+
 	http.HandleFunc("/user/v1/changepwd", business.ChangePwd)
 	http.HandleFunc("/user/v1/forgetpwd", business.ForgetPwd)
+
 	http.HandleFunc("/user/v1/checkcode", business.CheckCode)
 	http.HandleFunc("/user/v1/captchas", business.GetCaptchas)
 
@@ -110,6 +112,7 @@ func go_WebServer() {
 
 	http.HandleFunc("/comment/v1/postcomment", business.Create_Comment)
 	http.HandleFunc("/comment/v1/getcomments", business.Get_CommentList)
+
 	http.HandleFunc("/comment/v1/getcommentbyno", business.Get_CommentByNo)
 	http.HandleFunc("/api/user/registered", business.Get_Test)
 

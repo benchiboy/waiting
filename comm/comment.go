@@ -53,8 +53,8 @@ type Wait_PostComment_Response struct {
 */
 type Wait_GetCommentList_Request struct {
 	User_id  string `json:"user_id"`
-	Curr_lng string `json:"curr_lng"`
-	Curr_lat string `json:"curr_lat"`
+	Curr_lng string `json:"lng"`
+	Curr_lat string `json:"lat"`
 }
 
 /*
@@ -93,6 +93,7 @@ type Wait_Comment_Info struct {
 	Lng         string `json:"lng"`
 	Lat         string `json:"lat"`
 	Comment_msg string `json:"comment_msg"`
+	Comment_no  string `json:"comment_no"`
 }
 
 func (Wait_Comment_Info) TableName() string {

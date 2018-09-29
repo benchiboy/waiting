@@ -13,6 +13,22 @@ import (
 	"github.com/mmcloughlin/geohash"
 )
 
+func GeoHash() {
+	log.Println(comm.BEGIN_TAG, "Comment......")
+	lng, _ := strconv.ParseFloat("114.058089", 64)
+	lat, _ := strconv.ParseFloat("22.53856", 64)
+	getval := geohash.EncodeInt(lat, lng)
+
+	fmt.Println(getval)
+
+	fmt.Println(geohash.NeighborsInt(getval))
+	fmt.Println("box====>", geohash.BoundingBoxInt(getval))
+	fmt.Println("box====>", geohash.BoundingBoxIntWithPrecision(getval, 15))
+
+	fmt.Println(geohash.NeighborsIntWithPrecision(getval, 20))
+
+}
+
 /*
 	1、保存用户的评论内容
 */
@@ -33,9 +49,11 @@ func Create_Comment(w http.ResponseWriter, r *http.Request) {
 
 	lng, _ := strconv.ParseFloat(post_comment.Lng, 64)
 	lat, _ := strconv.ParseFloat(post_comment.Lat, 64)
-	getval := geohash.EncodeInt(lat, lng)
+	//	getval := geohash.EncodeInt(lat, lng)
 
-	//log.Println("geohash=======>", geohash.)
+	geoVal := geohash.EncodeWithPrecision(lat, lng, 6)
+
+	log.Println("geohash=======>", geoVal)
 	commentNo := strconv.FormatInt(time.Now().UnixNano(), 10)
 	create_comment := comm.Wait_Users_Comment{
 		User_id:     post_comment.User_id,
@@ -44,7 +62,8 @@ func Create_Comment(w http.ResponseWriter, r *http.Request) {
 		Device_ip:   post_comment.Device_ip,
 		Lng:         post_comment.Lng,
 		Lat:         post_comment.Lat,
-		Geo_hash:    fmt.Sprintf("%d", getval),
+		Geo_hash:    geoVal,
+
 		Comment_msg: post_comment.Comment_msg,
 		Insert_time: time.Now().Unix(),
 		Update_time: time.Now().Unix()}
@@ -76,7 +95,13 @@ func Get_CommentList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
-	commentList, err := db.Get_CommentList("")
+
+	lng, _ := strconv.ParseFloat(getcomment_req.Curr_lng, 64)
+	lat, _ := strconv.ParseFloat(getcomment_req.Curr_lat, 64)
+
+	geoVal := geohash.EncodeWithPrecision(lat, lng, 6)
+
+	commentList, err := db.Get_CommentList(geoVal)
 	if err != nil {
 		Write_Response(comm.RESP_DB_ERROR, w, r)
 		log.Println(comm.END_TAG, "GetCommentList......", time.Since(t1))
