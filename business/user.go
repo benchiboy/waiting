@@ -45,6 +45,8 @@ func Write_Response(response interface{}, w http.ResponseWriter, r *http.Request
 func UserLogin(w http.ResponseWriter, r *http.Request) {
 	log.Println(comm.BEGIN_TAG, "Begin Login......")
 	t1 := time.Now()
+
+	log.Println("======>", r.Method)
 	var login comm.Wait_Login_Request
 	err := json.NewDecoder(r.Body).Decode(&login)
 	if err != nil {
@@ -52,6 +54,7 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 		log.Println(comm.END_TAG, "Json Error......", time.Since(t1))
 		return
 	}
+	log.Println(login)
 	defer r.Body.Close()
 	v, err := db.Get_User(login.Login_name)
 	if err != nil {
@@ -64,10 +67,8 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 		log.Println(comm.END_TAG, "User NoExist......", time.Since(t1))
 		return
 	}
+
 	user, ok := v.(*comm.Wait_User)
-
-	log.Println(login.Pic_code, user.Last_pic_code)
-
 	if login.Pic_code != "" {
 		verifyResult := base64Captcha.VerifyCaptcha(user.Last_pic_code, login.Pic_code)
 		if !verifyResult {
@@ -84,6 +85,7 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if user.Login_pwd != login.Login_pwd {
+
 			err = db.Update_User_PwdErr(*user)
 			if err != nil {
 				Write_Response(comm.RESP_DB_UPDATE_ERROR, w, r)
@@ -95,7 +97,17 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Write_Response(comm.RESP_SUCC, w, r)
+	user_resp := comm.Wait_Login_Response{Status_code: comm.RESP_SUCC.Status_code,
+		Status_msg:   comm.RESP_SUCC.Status_msg,
+		User_Phone:   user.Login_name,
+		User_Balance: user.User_balance,
+		User_Points:  user.User_points,
+		User_avatar:  user.Pic_head,
+		User_nick:    user.Nick_name,
+	}
+
+	Write_Response(user_resp, w, r)
+	log.Println(user_resp)
 	log.Println(comm.END_TAG, "End Successful......", time.Since(t1))
 	return
 }
@@ -203,13 +215,19 @@ func UploadPics(w http.ResponseWriter, r *http.Request) {
 func UploadPics_input(w http.ResponseWriter, r *http.Request) {
 	log.Println(comm.BEGIN_TAG, "UploadPics......")
 	t1 := time.Now()
-	r.FormFile("file")
-	file, handle, err := r.FormFile("file")
+	r.FormFile("fileName")
+	file, handle, err := r.FormFile("fileName")
 	if err != nil {
+		log.Println(err.Error())
 		err.Error()
+		return
 	}
-	fmt.Println(handle.Filename, handle.Size)
-	f, err := os.OpenFile("./"+handle.Filename, os.O_WRONLY|os.O_CREATE, 0666)
+	r.FormFile("userName")
+
+	userName := r.FormValue("userName")
+	fileName := userName + "-" + handle.Filename
+
+	f, err := os.OpenFile("./images/"+fileName, os.O_WRONLY|os.O_CREATE, 0666)
 	io.Copy(f, file)
 	if err != nil {
 		err.Error()
@@ -217,23 +235,21 @@ func UploadPics_input(w http.ResponseWriter, r *http.Request) {
 	defer f.Close()
 	defer file.Close()
 	fmt.Println("upload success")
-	Write_Response(comm.RESP_SUCC, w, r)
 
+	currUser := comm.Wait_User{
+		Login_name: userName,
+		Pic_head:   "http://localhost:8089/" + fileName,
+	}
+
+	err = db.Update_User_HeadPic(currUser)
+
+	pic_resp := comm.Wait_UploadPics_Response{
+		Status_code: comm.RESP_SUCC.Status_code,
+		Status_msg:  comm.RESP_SUCC.Status_msg,
+		User_picurl: "http://localhost:8089/" + fileName,
+	}
+	Write_Response(pic_resp, w, r)
 	log.Println(comm.END_TAG, "UploadPics Successful......", time.Since(t1))
-	return
-}
-
-/*
-	1、上传用户头像图片
-	2、如果上传成功，更新DB中存储文件名称
-*/
-func UploadPics_form(w http.ResponseWriter, r *http.Request) {
-	log.Println(comm.BEGIN_TAG, "UploadPics......")
-	fmt.Println("=======>", r.FormValue("verCode"))
-	fmt.Println("=======>", r.Form)
-	fmt.Println("=======>", r.Form["verCode"])
-	Write_Response(comm.RESP_SUCC, w, r)
-	log.Println(comm.END_TAG, "UploadPics Successful......")
 	return
 }
 
@@ -431,11 +447,55 @@ func GetUserList(w http.ResponseWriter, r *http.Request) {
 	}
 	userPics := make([]comm.Wait_GetUserPic, len(userList), len(userList))
 	for i, v := range userList {
-
 		userPics[i].Login_name = v.Login_name
 		userPics[i].Pic_full = v.Pic_full
 	}
 	userlist_resp := comm.Wait_GetUserList_Response{comm.RESP_SUCC.Status_code, comm.RESP_SUCC.Status_msg, userPics}
 	Write_Response(userlist_resp, w, r)
 	log.Println(comm.END_TAG, "GetUserList......", time.Since(t1))
+}
+
+/*
+	1、得到用户的基础信息
+		1、包括用户手机、昵称
+		2、账户余额
+		3、积分情况
+*/
+func GetUserInfo(w http.ResponseWriter, r *http.Request) {
+	log.Println(comm.BEGIN_TAG, "GetUserInfo......")
+	t1 := time.Now()
+
+	var user_req comm.Wait_GetUser_Request
+	err := json.NewDecoder(r.Body).Decode(&user_req)
+	if err != nil {
+		log.Println(err.Error())
+		Write_Response(comm.RESP_JSON_ERROR, w, r)
+		return
+	}
+	defer r.Body.Close()
+
+	v, err := db.Get_User(user_req.Login_name)
+	if err != nil {
+		Write_Response(comm.RESP_DB_ERROR, w, r)
+		log.Println(comm.END_TAG, "GetUserInfo......", time.Since(t1))
+		return
+	}
+
+	userInfo, ok := v.(*comm.Wait_User)
+	if !ok {
+		Write_Response(comm.RESP_USER_NOEXIST, w, r)
+		log.Println(comm.END_TAG, "GetUserInfo......", time.Since(t1))
+		return
+	}
+
+	user_resp := comm.Wait_GetUser_Response{Status_code: comm.RESP_SUCC.Status_code,
+		Status_msg:    comm.RESP_SUCC.Status_msg,
+		User_Phone:    userInfo.Login_name,
+		User_Balance:  userInfo.User_balance,
+		User_Points:   userInfo.User_points,
+		User_ImageUrl: userInfo.Pic_head,
+	}
+
+	Write_Response(user_resp, w, r)
+	log.Println(comm.END_TAG, "GetUserInfo......", time.Since(t1))
 }

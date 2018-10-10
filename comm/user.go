@@ -30,6 +30,8 @@ type Wait_User struct {
 	Pic_head        string    `gorm:"column:pic_head"`
 	Pic_full        string    `gorm:"column:pic_full"`
 	User_memo       string    `gorm:"column:user_memo"`
+	User_balance    string    `gorm:"column:user_balance"`
+	User_points     string    `gorm:"column:user_points"`
 	Version         int       `gorm:"column:version"`
 }
 
@@ -138,26 +140,34 @@ type Wait_Login_Request struct {
 	Waiting api union response
 */
 type Wait_Login_Response struct {
-	Status_code string `json:"status_code"`
-	Status_msg  string `json:"status_msg"`
+	Status_code   string `json:"status_code"`
+	Status_msg    string `json:"status_msg"`
+	User_nick     string `json:"user_nick,omitempty"`
+	User_ImageUrl string `json:"user_imageurl,omitempty"`
+	User_Phone    string `json:"user_phone,omitempty"`
+	User_Balance  string `json:"user_balance,omitempty"`
+	User_Points   string `json:"user_points,omitempty"`
+	User_avatar   string `json:"user_avatar,omitempty"`
 }
 
 /*
 	Get User request
 */
 type Wait_GetUser_Request struct {
-	User_id string `json:"user_id"`
+	Login_name string `json:"login_name"`
 }
 
 /*
 	Get User response
 */
 type Wait_GetUser_Response struct {
-	Status_code string `json:"status_code"`
-	Status_msg  string `json:"status_msg"`
-	User_Name   string `json:"user_name"`
-	User_IdNo   string `json:"user_idno"`
-	User_Phone  string `json:"user_phone"`
+	Status_code   string `json:"status_code"`
+	Status_msg    string `json:"status_msg"`
+	User_nick     string `json:"user_nick,omitempty"`
+	User_ImageUrl string `json:"user_imageurl,omitempty"`
+	User_Phone    string `json:"user_phone,omitempty"`
+	User_Balance  string `json:"user_balance,omitempty"`
+	User_Points   string `json:"user_points,omitempty"`
 }
 
 /*
@@ -268,6 +278,7 @@ type Wait_UploadPics_Request struct {
 type Wait_UploadPics_Response struct {
 	Status_code string `json:"status_code"`
 	Status_msg  string `json:"status_msg"`
+	User_picurl string `json:"user_picurl"`
 }
 
 /*

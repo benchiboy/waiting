@@ -22,6 +22,7 @@ func Http_get(goUrl string, kvMap map[string]string) (string, error) {
 	}
 	t := time.Now()
 	client := &http.Client{}
+
 	reqest, err := http.NewRequest("GET", goUrl+urlVal, nil)
 	if err != nil {
 		log.Println("NewRequest is error")

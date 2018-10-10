@@ -27,8 +27,6 @@ var (
 	http_srv *http.Server
 )
 
-//var sessionManager = scs.NewCookieManager("u46IpCV9y5Vlur8YvODJEhgOY8m9JVE4")
-
 func ValidateTokenMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	token, err := request.ParseFromRequest(r, request.AuthorizationHeaderExtractor,
 		func(token *jwt.Token) (interface{}, error) {
@@ -53,8 +51,6 @@ func init() {
 	//日志配置
 
 	log.Println("init session...")
-	//	sessionManager.Persist(true)
-	//sessionManager.Lifetime(time.Second * 10)
 
 	log.SetFlags(log.Ldate | log.Lshortfile | log.Lmicroseconds)
 	log.SetOutput(io.MultiWriter(os.Stdout, &lumberjack.Logger{
@@ -80,13 +76,15 @@ func init() {
 func go_WebServer() {
 	//开启http服务
 	log.Println("Service start listen ", comm.ConfigNode.ListenPort)
-	http.Handle("/", http.FileServer(http.Dir("./html/")))
+	http.Handle("/", http.FileServer(http.Dir("./images/")))
+
 	//busi process
 	//http.HandleFunc("/WeiboCancelCallback", business.WeiboCancelCallback)
 	//http.HandleFunc("/WeiboCallback", business.WeiboCallback)
+
 	//	http.Handle("/user/v1/getuser", negroni.New(
 	//		negroni.HandlerFunc(ValidateTokenMiddleware),
-	//		negroni.Wrap(http.HandlerFunc(business.GetUser)),
+	//		negroni.Wrap(http.HandlerFunc(business.GetUserInfo)),
 	//	))
 
 	//用户管理模块
@@ -105,10 +103,11 @@ func go_WebServer() {
 	http.HandleFunc("/user/v1/captchas", business.GetCaptchas)
 
 	http.HandleFunc("/user/v1/getuserlist", business.GetUserList)
+	http.HandleFunc("/user/v1/getuser", business.GetUserInfo)
+
 	http.HandleFunc("/user/v1/uploadpics", business.UploadPics)
 
 	http.HandleFunc("/user/v1/uploadpics_input", business.UploadPics_input)
-	http.HandleFunc("/user/v1/uploadpics_form", business.UploadPics_form)
 
 	http.HandleFunc("/comment/v1/postcomment", business.Create_Comment)
 	http.HandleFunc("/comment/v1/getcomments", business.Get_CommentList)
